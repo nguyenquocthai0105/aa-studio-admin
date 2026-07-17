@@ -6,6 +6,8 @@ import Card from "../../components/common/Card/Card";
 import Input from "../../components/common/Input/Input";
 import Logo from "../../components/common/Logo/Logo";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import axiosClient from "../../services/api";
 
 import styles from "./Login.module.css";
 
@@ -128,18 +130,28 @@ function Login() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const TEST_USERNAME = "quocthai123";
-    const TEST_PASSWORD = "quocthai123";
+    try {
+      // Gọi qua axiosClient, đường dẫn chỉ cần ghi phần đuôi phía sau "/api"
+      const response = await axiosClient.post("/auth/login", {
+        username,
+        password,
+      });
 
-    if (username === TEST_USERNAME && password === TEST_PASSWORD) {
-      console.log("Đăng nhập admin thành công!", { username, remember });
-      navigate("/dashboard");
-    } else {
-      setErrors({ auth: "Tài khoản hoặc mật khẩu Studio không đúng!" });
+      if (response.data.success) {
+        console.log("Đăng nhập admin thành công!", { username, remember });
+        localStorage.setItem("token", response.data.token);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (error.response && error.response.data) {
+        setErrors({ auth: error.response.data.message });
+      } else {
+        setErrors({ auth: "Không thể kết nối tới máy chủ Backend!" });
+      }
     }
   };
 
@@ -160,20 +172,26 @@ function Login() {
             <span>Art & Creative</span>
           </h1>
           <p className={styles.heroText}>
-            Chào mừng bạn trở lại không gian sáng tạo. Hệ thống quản lý toàn diện 
-            lịch chụp, khách hàng và quy trình hậu kỳ của Á À Studio.
+            Chào mừng bạn trở lại không gian sáng tạo. Hệ thống quản lý toàn
+            diện lịch chụp, khách hàng và quy trình hậu kỳ của Á À Studio.
           </p>
           <div className={styles.featureList}>
             <div className={styles.featureItem}>
-              <span className={styles.featureIcon}><CheckIcon /></span>
+              <span className={styles.featureIcon}>
+                <CheckIcon />
+              </span>
               <span>Lưu giữ và điều phối khoảnh khắc</span>
             </div>
             <div className={styles.featureItem}>
-              <span className={styles.featureIcon}><CheckIcon /></span>
+              <span className={styles.featureIcon}>
+                <CheckIcon />
+              </span>
               <span>Tối ưu quy trình vận hành Studio</span>
             </div>
             <div className={styles.featureItem}>
-              <span className={styles.featureIcon}><CheckIcon /></span>
+              <span className={styles.featureIcon}>
+                <CheckIcon />
+              </span>
               <span>Bảo mật dữ liệu & hình ảnh khách hàng</span>
             </div>
           </div>
