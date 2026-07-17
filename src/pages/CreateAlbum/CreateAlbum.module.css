@@ -1,0 +1,232 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #7e6e65;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #3d322a;
+  font-weight: 700;
+}
+
+.pageHeader p {
+  margin: 6px 0 0 0;
+  font-size: 14px;
+  color: #7e6e65;
+}
+
+.formStructure {
+  margin-top: 32px;
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(78, 64, 54, 0.06);
+  box-shadow: 0 10px 30px rgba(78, 64, 54, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sectionLabel {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.sectionLabel span:first-child {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3d322a;
+}
+
+.subLabel {
+  font-size: 12px;
+  color: #b58d63;
+  margin-top: 4px;
+}
+
+/* KHU VỰC GRID HIỂN THỊ CÁC Ô HÌNH ẢNH */
+.gridContainer {
+  display: flex;
+  flex-wrap: wrap;
+  
+  /* TĂNG KHOẢNG CÁCH: Đẩy khoảng cách giữa các ảnh rộng ra 28px (thay vì 16px cũ) */
+  gap: 35px 40px; 
+  
+  /* THÊM ĐỆM: Tạo khoảng trống 12px xung quanh để các nút lồi ra ngoài không bị dính sát viền khung lớn */
+  padding: 12px; 
+}
+
+/* FIX CỨNG KÍCH THƯỚC THEO BẢN THIẾT KẾ CỦA BẠN (136px x 156px) */
+.uploadTrigger,
+.imageCard {
+  width: 136px;
+  height: 156px;
+  border-radius: 12px;
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Ô NÚT BẤM CHỌN ẢNH THÊM */
+.uploadTrigger {
+  border: 2px dashed rgba(181, 141, 99, 0.3);
+  background-color: #fdfcfb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uploadTrigger:hover {
+  background-color: #fcf9f6;
+  border-color: #b58d63;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.uploadIcon {
+  color: #b58d63;
+  margin-bottom: 6px;
+}
+
+.uploadText {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3d322a;
+}
+
+/* THÈ HIỂN THỊ HÌNH ẢNH KÉO THẢ */
+.imageCard {
+  width: 136px;
+  height: 156px;
+  position: relative;
+  flex-shrink: 0;
+  cursor: grab;
+  background-color: #f5eee6;
+  border-radius: 12px;
+  
+  /* QUAN TRỌNG: Bỏ overflow: hidden cũ để các nút bong bóng có thể lồi ra ngoài góc */
+  overflow: visible; 
+  
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+}
+
+.imageCard:active {
+  cursor: grabbing;
+}
+
+/* Bo góc được chuyển trực tiếp xuống thẻ img */
+.imageCard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px; 
+  border: 1px solid rgba(78, 64, 54, 0.12);
+  pointer-events: none;
+}
+
+/* BONG BÓNG SỐ THỨ TỰ - GÓC TRÊN BÊN TRÁI (Giống Messenger) */
+.indexNumber {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Kỹ thuật dịch chuyển tâm ra đúng góc nhọn của ảnh */
+  transform: translate(-50%, -50%); 
+  
+  background-color: #3d322a; /* Màu Espresso chủ đạo studio */
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid #ffffff; /* Viền trắng tạo khoảng cách tách biệt với ảnh */
+  z-index: 10;
+}
+
+/* BONG BÓNG NÚT XÓA X - GÓC TRÊN BÊN PHẢI (Giống Messenger) */
+.removeBtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  /* Kỹ thuật dịch chuyển tâm ra đúng góc nhọn của ảnh */
+  transform: translate(50%, -50%); 
+  
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #ffffff; /* Viền trắng sang trọng */
+  background-color: #ef4444; /* Màu đỏ nổi bật */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.removeBtn:hover {
+  background-color: #dc2626;
+  /* Hiệu ứng phóng to nhẹ bong bóng X khi di chuột vào nút xóa */
+  transform: translate(50%, -50%) scale(1.1); 
+}
+
+/* Nhấc nhẹ toàn bộ tấm ảnh lên khi đang kéo thả */
+.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+.dragging img {
+  border: 2px dashed #b58d63;
+}
+.coverBadge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: #b58d63;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.errorBanner {
+  background-color: rgba(220, 38, 38, 0.06);
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}

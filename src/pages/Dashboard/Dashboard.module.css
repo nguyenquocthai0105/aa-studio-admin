@@ -1,0 +1,176 @@
+/* Đoạn code CSS chỉnh sửa & bổ sung thay thế cho phần Avatar cũ */
+
+.imagePreview {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(78, 64, 54, 0.1);
+  background-color: #f5eee6;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Đảm bảo hình ảnh không bị bóp méo, tự động cắt tỉa vừa khung vuông */
+  transition: transform 0.3s ease;
+}
+
+/* Khi hover vào dòng dữ liệu, ảnh đại diện zoom nhẹ nghệ thuật */
+.listItem:hover .imagePreview img {
+  transform: scale(1.1);
+}
+
+/* Định dạng riêng cho khung ảnh Trang phục nếu cần tinh chỉnh tỉ lệ */
+.imageCostume {
+  border-color: rgba(61, 50, 42, 0.15);
+}
+
+/* Giữ nguyên các class layout cũ từ file trước của bạn */
+.dashboardContainer {
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  background-color: #fcf9f6;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 34px;
+  border-bottom: 1px solid rgba(78, 64, 54, 0.08);
+  padding-bottom: 20px;
+}
+.welcomeZone h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #3d322a;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.welcomeZone p {
+  margin: 6px 0 0 0;
+  color: #7e6e65;
+  font-size: 14px;
+}
+.dateBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  color: #7e6e65;
+  border: 1px solid rgba(78, 64, 54, 0.06);
+}
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+.statCard {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 20px rgba(78, 64, 54, 0.04);
+}
+.statIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconGold { background: rgba(222, 194, 164, 0.15); color: #b58d63; }
+.iconBrown { background: rgba(61, 50, 42, 0.08); color: #3d322a; }
+.iconGreen { background: rgba(52, 211, 153, 0.1); color: #059669; }
+.iconPurple { background: rgba(167, 139, 250, 0.1); color: #7c3aed; }
+.statInfo { display: flex; flex-direction: column; }
+.statLabel { font-size: 13px; color: #7e6e65; margin-bottom: 4px; }
+.statValue { font-size: 20px; font-weight: 700; color: #3d322a; }
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+@media (max-width: 1024px) {
+  .mainContent { grid-template-columns: 1fr; }
+}
+.sectionCard {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid rgba(78, 64, 54, 0.06);
+  box-shadow: 0 10px 30px rgba(78, 64, 54, 0.03);
+}
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.sectionTitle h3 { margin: 0; font-size: 18px; color: #3d322a; font-weight: 600; }
+.sectionTitle p { margin: 4px 0 0 0; font-size: 13px; color: #7e6e65; }
+.btnPrimary {
+  background-color: #3d322a;
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.listContainer { display: flex; flex-direction: column; gap: 12px; }
+.listItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  background-color: #fdfcfb;
+  border: 1px solid rgba(78, 64, 54, 0.04);
+  transition: all 0.2s ease;
+}
+.listItem:hover {
+  transform: translateX(4px);
+  background-color: #ffffff;
+  border-color: rgba(222, 194, 164, 0.4);
+}
+.itemMain { display: flex; align-items: center; gap: 14px; }
+.itemDetails { display: flex; flex-direction: column; }
+.itemName { font-size: 15px; font-weight: 600; color: #3d322a; }
+.itemMeta { font-size: 13px; color: #7e6e65; margin-top: 2px; }
+.priceHighlight { color: #b58d63; font-weight: 600; }
+.itemActions { display: flex; gap: 6px; }
+.btnAction {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(78, 64, 54, 0.08);
+  background-color: #ffffff;
+  color: #7e6e65;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.btnAction:hover { background-color: #3d322a; color: #ffffff; }
+.btnDelete:hover { background-color: #ef4444; color: #ffffff; }

@@ -5,6 +5,7 @@ import Button from "../../components/common/Button/Button";
 import Card from "../../components/common/Card/Card";
 import Input from "../../components/common/Input/Input";
 import Logo from "../../components/common/Logo/Logo";
+import { useNavigate } from "react-router-dom";
 
 import styles from "./Login.module.css";
 
@@ -117,6 +118,7 @@ function Login() {
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   const validate = () => {
     const nextErrors = {};
@@ -135,7 +137,7 @@ function Login() {
 
     if (username === TEST_USERNAME && password === TEST_PASSWORD) {
       console.log("Đăng nhập admin thành công!", { username, remember });
-      alert("Đăng nhập thành công! Đang vào Dashboard...");
+      navigate("/dashboard");
     } else {
       setErrors({ auth: "Tài khoản hoặc mật khẩu Studio không đúng!" });
     }
