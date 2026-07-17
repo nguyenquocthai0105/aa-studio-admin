@@ -174,12 +174,14 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className={styles.itemActions}>
-                    <button
+                    {/* Sửa lại phần nút Edit3 trong map album ở Dashboard */}
+                    <Link
+                      to={`/albums/edit/${album.id}`}
                       className={styles.btnAction}
                       title="Sửa tên & bộ ảnh"
                     >
                       <Edit3 size={16} />
-                    </button>
+                    </Link>
                     <button
                       className={`${styles.btnAction} ${styles.btnDelete}`}
                       title="Xóa"
@@ -200,10 +202,10 @@ function Dashboard() {
               <h3>Quản lý Trang phục</h3>
               <p>Ảnh chứa sẵn thông tin chi tiết đồ, mã QR và bảng giá</p>
             </div>
-            <button className={styles.btnPrimary}>
+            <Link to="/costumes/new" className={styles.btnPrimary}>
               <Plus size={16} />
-              <span>Thêm đồ</span>
-            </button>
+              <span>Thêm trang phục</span>
+            </Link>
           </div>
 
           <div className={styles.listContainer}>
@@ -237,12 +239,13 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className={styles.itemActions}>
-                    <button
+                    <Link
+                      to={`/costumes/edit/${costume.id}`}
                       className={styles.btnAction}
                       title="Sửa thông tin giá & ảnh"
                     >
                       <Edit3 size={16} />
-                    </button>
+                    </Link>
                     <button
                       className={`${styles.btnAction} ${styles.btnDelete}`}
                       title="Xóa đồ"
