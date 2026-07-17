@@ -9,12 +9,15 @@ function Button({
   disabled = false,
   fullWidth = true,
   onClick,
+  className = "",
+  ...props
 }) {
   const classNames = [
     styles.button,
     styles[variant],
     styles[size],
     fullWidth ? styles.fullWidth : "",
+    className,
   ]
     .filter(Boolean)
     .join(" ");
@@ -25,6 +28,7 @@ function Button({
       className={classNames}
       disabled={disabled || loading}
       onClick={onClick}
+      {...props}
     >
       {loading ? "Loading..." : children}
     </button>

@@ -1,31 +1,33 @@
 :root {
-  /* ===== Colors ===== */
-  --color-bg: #0f1115;
-  --color-surface: #171a21;
-  --color-card: #1d212a;
+  --color-bg: #f6f1eb;
+  --color-bg-soft: #efe7dd;
 
-  --color-primary: #ffffff;
-  --color-secondary: #a5adba;
+  --color-card: rgba(255, 255, 255, 0.78);
+  --color-card-solid: #fffdfa;
 
-  --color-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #4e4036;
+  --color-primary-dark: #3d322a;
+  --color-accent: #8e7560;
+  --color-accent-soft: #c5a78b;
 
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
+  --color-text: #2b241f;
+  --color-text-soft: #74675d;
+  --color-text-light: #f7f2ec;
 
-  /* ===== Radius ===== */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --color-border: #d9cfc6;
+  --color-border-strong: #cbbfb4;
 
-  /* ===== Shadow ===== */
-  --shadow-card:
-      0 10px 30px rgba(0,0,0,.25);
+  --color-danger: #c75b5b;
+  --color-success: #4e8b6f;
 
-  /* ===== Transition ===== */
-  --transition: .25s ease;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
 
-  /* ===== Layout ===== */
-  --sidebar-width: 260px;
-  --header-height: 72px;
+  --transition: all 0.25s ease;
+
+  --shadow-sm: 0 8px 24px rgba(78, 64, 54, 0.08);
+  --shadow-md: 0 18px 40px rgba(78, 64, 54, 0.12);
+  --shadow-lg: 0 28px 80px rgba(78, 64, 54, 0.16);
 }
