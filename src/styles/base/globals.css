@@ -1,33 +1,27 @@
-@import "./variables.css";
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
 html,
 body,
 #root{
-    width:100%;
     min-height:100vh;
 }
 
 body{
+    background:var(--color-bg);
+    color:var(--color-primary);
     font-family:"Inter",sans-serif;
-    background:var(--bg-primary);
-    color:var(--text-primary);
     line-height:1.5;
 }
 
 button,
-input{
+input,
+textarea,
+select{
     font:inherit;
 }
 
 button{
+    cursor:pointer;
     border:none;
-    outline:none;
+    background:none;
 }
 
 input{
@@ -42,4 +36,8 @@ a{
 img{
     display:block;
     max-width:100%;
+}
+
+ul{
+    list-style:none;
 }

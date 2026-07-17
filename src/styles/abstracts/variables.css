@@ -1,0 +1,31 @@
+:root {
+  /* ===== Colors ===== */
+  --color-bg: #0f1115;
+  --color-surface: #171a21;
+  --color-card: #1d212a;
+
+  --color-primary: #ffffff;
+  --color-secondary: #a5adba;
+
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+
+  /* ===== Radius ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  /* ===== Shadow ===== */
+  --shadow-card:
+      0 10px 30px rgba(0,0,0,.25);
+
+  /* ===== Transition ===== */
+  --transition: .25s ease;
+
+  /* ===== Layout ===== */
+  --sidebar-width: 260px;
+  --header-height: 72px;
+}

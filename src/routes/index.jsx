@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
-import CreateAlbum from "../pages/CreateAlbum/CreateAlbum";
+import CreateAlbum from "../pages/CreateAlbum/CreateAlbum.jsx";
 
 function AppRouter() {
     return (
