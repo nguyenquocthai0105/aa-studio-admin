@@ -4,6 +4,8 @@ import { Shirt, DollarSign, X, ArrowLeft, UploadCloud } from "lucide-react";
 import Button from "../../components/common/Button/Button";
 import Input from "../../components/common/Input/Input";
 import styles from "./CreateCostume.module.css";
+import costumeService from "../../services/costumeService";
+import imageCompression from "browser-image-compression";
 
 function CreateCostume() {
   const navigate = useNavigate();
@@ -11,6 +13,10 @@ function CreateCostume() {
   const [price, setPrice] = useState(""); // Lưu giá trị đã được format để hiển thị (VD: 2,500,000 VND)
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  // Trạng thái hiển thị Custom Toast Notification
+  const [showToast, setShowToast] = useState(false);
 
   // --- HÀM TỰ ĐỘNG FORMAT TIỀN KHI GÕ ---
   const handlePriceChange = (e) => {
@@ -49,33 +55,59 @@ function CreateCostume() {
     setImage(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!costumeName.trim()) {
-      setError("Vui lòng nhập tên trang phục");
-      return;
-    }
-    if (!price.trim()) {
-      setError("Vui lòng nhập giá thuê công khai");
-      return;
-    }
-    if (!image) {
-      setError("Vui lòng tải lên ảnh thẻ trang phục");
-      return;
-    }
+    setError("");
 
-    // MẸO: Tách lấy chuỗi số nguyên thuần túy gửi lên Database (VD: "2500000")
-    const rawPriceValue = price.replace(/\D/g, "");
+    if (!costumeName.trim()) return setError("Vui lòng nhập tên trang phục");
+    if (!price.trim()) return setError("Vui lòng nhập giá thuê công khai");
+    if (!image) return setError("Vui lòng tải lên ảnh thẻ trang phục");
 
-    const formData = {
-      name: costumeName,
-      price: rawPriceValue, // Gửi số thuần túy lên backend cho dễ tính toán
-      file: image.file
-    };
+    try {
+      setLoading(true);
 
-    console.log("Dữ liệu trang phục mới gửi lên hệ thống Á À Studio:", formData);
-    alert(`Đã thêm thành công trang phục: ${costumeName}!`);
-    navigate("/dashboard");
+      // Tách lấy chuỗi số nguyên thuần túy gửi lên Database (VD: "2500000")
+      const rawPriceValue = price.replace(/\D/g, "");
+
+      const formData = new FormData();
+      formData.append("name", costumeName);
+      formData.append("price", rawPriceValue);
+
+      // Cấu hình nén ảnh máy cơ hoặc ảnh QR sang định dạng tối ưu 1.5MB
+      const compressionOptions = {
+        maxSizeMB: 1.5,
+        maxWidthOrHeight: 2000,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(image.file, compressionOptions);
+      formData.append("image", compressedFile);
+
+      // Gọi thông qua tầng service tập trung
+      const data = await costumeService.createCostume(formData);
+
+      if (data.success) {
+        // Hiện Toast thông báo mượt mà tone sáng tiệp màu form
+        setShowToast(true);
+
+        // Reset dữ liệu form
+        setCostumeName("");
+        setPrice("");
+        if (image) URL.revokeObjectURL(image.previewUrl);
+        setImage(null);
+
+        // Đợi 2 giây xem hiệu ứng Toast rồi mới chuyển hướng về bàn làm việc
+        setTimeout(() => {
+          setShowToast(false);
+          navigate("/dashboard");
+        }, 2000);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Có lỗi xảy ra khi upload hoặc xử lý dữ liệu lưu kho!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -104,7 +136,6 @@ function CreateCostume() {
             icon={<Shirt size={18} />}
           />
 
-          {/* Ô NHẬP GIÁ ĐÃ ĐƯỢC CẤP NHẬT LOGIC FORMAT */}
           <Input
             id="costumePrice"
             label="Giá Thuê Công Khai"
@@ -149,9 +180,23 @@ function CreateCostume() {
         </div>
 
         <div className={styles.actionRow}>
-          <Button type="submit" size="lg">Kích hoạt Trang phục</Button>
+          <Button type="submit" size="lg" disabled={loading}>
+            {loading ? "Đang xử lý & lưu kho..." : "Kích hoạt Trang phục"}
+          </Button>
         </div>
       </form>
+
+      {/* --- TIMING TOAST NOTIFICATION PHỐI MÀU SÁNG SANG TRỌNG --- */}
+      {showToast && (
+        <div className={styles.toastContainer}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(34, 197, 94, 0.1)', padding: '6px', borderRadius: '50%' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div className={styles.toastContent}>Thêm trang phục vào kho thành công! 🎉</div>
+        </div>
+      )}
     </div>
   );
 }

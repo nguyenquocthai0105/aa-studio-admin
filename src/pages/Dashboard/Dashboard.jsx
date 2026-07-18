@@ -9,10 +9,11 @@ import {
   Edit3,
   Trash2,
   AlertTriangle,
-  X
+  X,
 } from "lucide-react";
 import styles from "./Dashboard.module.css";
-import axiosClient from "../../services/api";
+import albumService from "../../services/albumService";
+import costumeService from "../../services/costumeService";
 
 function Dashboard() {
   const [albums, setAlbums] = useState([]);
@@ -27,25 +28,25 @@ function Dashboard() {
     revenueMonth: "45.000.000 đ",
   });
 
-  // --- TRẠNG THÁI QUẢN LÝ CUSTOM MODAL XÓA ---
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     id: null,
     name: "",
-    type: "" // "album" hoặc "costume"
+    type: "",
   });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [albumsRes, costumesRes] = await Promise.all([
-          axiosClient.get("/albums"),
-          axiosClient.get("/costumes"),
+
+        const [albumsData, costumesData] = await Promise.all([
+          albumService.getAllAlbums(),
+          costumeService.getAllCostumes(),
         ]);
 
-        const fetchedAlbums = albumsRes.data || [];
-        const fetchedCostumes = costumesRes.data || [];
+        const fetchedAlbums = albumsData || [];
+        const fetchedCostumes = costumesData || [];
 
         setAlbums(fetchedAlbums);
         setCostumes(fetchedCostumes);
@@ -66,38 +67,43 @@ function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  // --- MỞ MODAL XÓA (THAY THẾ WINDOW.CONFIRM) ---
   const openDeleteModal = (id, name, type) => {
     setDeleteModal({
       isOpen: true,
       id,
       name,
-      type
+      type,
     });
   };
 
-  // --- ĐÓNG MODAL ---
   const closeDeleteModal = () => {
     setDeleteModal({ isOpen: false, id: null, name: "", type: "" });
   };
 
-  // --- HÀM XỬ LÝ XÓA THẬT KHIẤN BẤM "XÁC NHẬN XÓA" TRÊN MODAL ---
   const handleConfirmDelete = async () => {
-    const { id, name, type } = deleteModal;
+    const { id, type } = deleteModal;
+
     try {
       if (type === "album") {
-        const response = await axiosClient.delete(`/albums/${id}`);
-        if (response.data.success) {
+        const data = await albumService.deleteAlbum(id);
+        if (data.success) {
           setAlbums((prev) => prev.filter((album) => album._id !== id));
-          setStats((prev) => ({ ...prev, totalAlbums: prev.totalAlbums - 1 }));
+          setStats((prev) => ({
+            ...prev,
+            totalAlbums: prev.totalAlbums - 1,
+          }));
         }
       } else if (type === "costume") {
-        const response = await axiosClient.delete(`/costumes/${id}`);
-        if (response.data.success) {
+        const data = await costumeService.deleteCostume(id);
+        if (data.success) {
           setCostumes((prev) => prev.filter((item) => item._id !== id));
-          setStats((prev) => ({ ...prev, totalCostumes: prev.totalCostumes - 1 }));
+          setStats((prev) => ({
+            ...prev,
+            totalCostumes: prev.totalCostumes - 1,
+          }));
         }
       }
+
       closeDeleteModal();
     } catch (err) {
       console.error(`Lỗi khi xóa ${type}:`, err);
@@ -105,34 +111,37 @@ function Dashboard() {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center", color: "#fff" }}>
-        Đang tải không gian quản trị...
+      <div className={styles.loadingScreen}>
+        <div className={styles.loadingGlow}></div>
+        <div className={styles.loadingText}>Đang tải không gian quản trị...</div>
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
-      <div className={styles.errorBanner} style={{ margin: "2rem" }}>
-        {error}
+      <div className={styles.dashboardContainer}>
+        <div className={styles.errorBanner}>{error}</div>
       </div>
     );
+  }
 
   return (
     <div className={styles.dashboardContainer}>
-      {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.welcomeZone}>
           <h1>Á À Studio</h1>
           <p>Không gian quản trị nội bộ • Xin chào, Quốc Thái</p>
         </div>
+
         <div className={styles.dateBadge}>
           <Calendar size={16} />
           <span>Hôm nay: {new Date().toLocaleDateString("vi-VN")}</span>
         </div>
       </header>
 
-      {/* STATS GRID */}
       <section className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.iconGold}`}>
@@ -143,6 +152,7 @@ function Dashboard() {
             <span className={styles.statValue}>{stats.totalAlbums}</span>
           </div>
         </div>
+
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.iconBrown}`}>
             <Shirt size={22} />
@@ -152,6 +162,7 @@ function Dashboard() {
             <span className={styles.statValue}>{stats.totalCostumes}</span>
           </div>
         </div>
+
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.iconGreen}`}>
             <Calendar size={22} />
@@ -161,6 +172,7 @@ function Dashboard() {
             <span className={styles.statValue}>{stats.bookingsToday}</span>
           </div>
         </div>
+
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.iconPurple}`}>
             <TrendingUp size={22} />
@@ -172,15 +184,14 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* MAIN WORKSPACE */}
       <div className={styles.mainContent}>
-        {/* KHỐI ALBUM THẬT */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
               <h3>Quản lý Album Ảnh</h3>
-              <p>Hiển thị trên Web User (Tối đa 15 ảnh/album)</p>
+              <p>Hiển thị trên Web User • Tối đa 15 ảnh/album</p>
             </div>
+
             <Link to="/albums/new" className={styles.btnPrimary}>
               <Plus size={16} />
               <span>Tạo Album mới</span>
@@ -189,16 +200,23 @@ function Dashboard() {
 
           <div className={styles.listContainer}>
             {albums.length === 0 ? (
-              <p style={{ color: "#aaa", padding: "1rem 0" }}>Chưa có album nào được tạo.</p>
+              <p className={styles.emptyText}>Chưa có album nào được tạo.</p>
             ) : (
               albums.map((album) => {
-                const coverImage = album.images && album.images.length > 0 ? album.images[0] : "";
+                const coverImage =
+                  album.images && album.images.length > 0 ? album.images[0] : "";
+
                 return (
                   <div key={album._id} className={styles.listItem}>
                     <div className={styles.itemMain}>
                       <div className={styles.imagePreview}>
-                        <img src={coverImage} alt={album.name} loading="lazy" />
+                        {coverImage ? (
+                          <img src={coverImage} alt={album.name} loading="lazy" />
+                        ) : (
+                          <div className={styles.fallbackThumb}>No image</div>
+                        )}
                       </div>
+
                       <div className={styles.itemDetails}>
                         <span className={styles.itemName}>{album.name}</span>
                         <span className={styles.itemMeta}>
@@ -206,10 +224,16 @@ function Dashboard() {
                         </span>
                       </div>
                     </div>
+
                     <div className={styles.itemActions}>
-                      <Link to={`/albums/edit/${album._id}`} className={styles.btnAction} title="Sửa tên & bộ ảnh">
+                      <Link
+                        to={`/albums/edit/${album._id}`}
+                        className={styles.btnAction}
+                        title="Sửa tên & bộ ảnh"
+                      >
                         <Edit3 size={16} />
                       </Link>
+
                       <button
                         className={`${styles.btnAction} ${styles.btnDelete}`}
                         title="Xóa"
@@ -225,13 +249,13 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* KHỐI TRANG PHỤC THẬT */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
               <h3>Quản lý Trang phục</h3>
               <p>Ảnh chứa sẵn thông tin chi tiết đồ, mã QR và bảng giá</p>
             </div>
+
             <Link to="/costumes/new" className={styles.btnPrimary}>
               <Plus size={16} />
               <span>Thêm trang phục</span>
@@ -240,7 +264,7 @@ function Dashboard() {
 
           <div className={styles.listContainer}>
             {costumes.length === 0 ? (
-              <p style={{ color: "#aaa", padding: "1rem 0" }}>Chưa có trang phục nào trong kho.</p>
+              <p className={styles.emptyText}>Chưa có trang phục nào trong kho.</p>
             ) : (
               costumes.map((costume) => {
                 const costumeImage = costume.imageUrl || "";
@@ -253,23 +277,39 @@ function Dashboard() {
                   <div key={costume._id} className={styles.listItem}>
                     <div className={styles.itemMain}>
                       <div className={`${styles.imagePreview} ${styles.imageCostume}`}>
-                        <img src={costumeImage} alt={costume.name} loading="lazy" />
+                        {costumeImage ? (
+                          <img src={costumeImage} alt={costume.name} loading="lazy" />
+                        ) : (
+                          <div className={styles.fallbackThumb}>No image</div>
+                        )}
                       </div>
+
                       <div className={styles.itemDetails}>
                         <span className={styles.itemName}>{costume.name}</span>
                         <span className={styles.itemMeta}>
-                          Giá thuê: <strong className={styles.priceHighlight}>{formattedPrice}</strong>
+                          Giá thuê:{" "}
+                          <strong className={styles.priceHighlight}>
+                            {formattedPrice}
+                          </strong>
                         </span>
                       </div>
                     </div>
+
                     <div className={styles.itemActions}>
-                      <Link to={`/costumes/edit/${costume._id}`} className={styles.btnAction} title="Sửa thông tin giá & ảnh">
+                      <Link
+                        to={`/costumes/edit/${costume._id}`}
+                        className={styles.btnAction}
+                        title="Sửa thông tin giá & ảnh"
+                      >
                         <Edit3 size={16} />
                       </Link>
+
                       <button
                         className={`${styles.btnAction} ${styles.btnDelete}`}
                         title="Xóa đồ"
-                        onClick={() => openDeleteModal(costume._id, costume.name, "costume")}
+                        onClick={() =>
+                          openDeleteModal(costume._id, costume.name, "costume")
+                        }
                       >
                         <Trash2 size={16} />
                       </button>
@@ -282,29 +322,43 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* --- CẤU TRÚC CUSTOM MODAL PHÍA DƯỚI CÙNG --- */}
       {deleteModal.isOpen && (
         <div className={styles.modalOverlay} onClick={closeDeleteModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button className={styles.modalCloseBtn} onClick={closeDeleteModal}>
               <X size={18} />
             </button>
+
             <div className={styles.modalHeader}>
               <div className={styles.warningIconZone}>
-                <AlertTriangle size={28} color="#ff4d4f" />
+                <AlertTriangle size={28} color="#ff5d73" />
               </div>
               <h3>Xác nhận xóa vĩnh viễn</h3>
             </div>
+
             <div className={styles.modalBody}>
-              <p>Bạn có chắc chắn muốn xóa vĩnh viễn {deleteModal.type === "album" ? "album ảnh" : "trang phục"}:</p>
+              <p>
+                Bạn có chắc chắn muốn xóa vĩnh viễn{" "}
+                {deleteModal.type === "album" ? "album ảnh" : "trang phục"}:
+              </p>
               <div className={styles.targetName}>"{deleteModal.name}"</div>
-              <p className={styles.warningText}>Hành động này không thể hoàn tác và dữ liệu sẽ mất hoàn toàn khỏi database.</p>
+              <p className={styles.warningText}>
+                Hành động này không thể hoàn tác và dữ liệu sẽ mất hoàn toàn khỏi
+                database.
+              </p>
             </div>
+
             <div className={styles.modalActions}>
               <button className={styles.btnCancel} onClick={closeDeleteModal}>
                 Hủy bỏ
               </button>
-              <button className={styles.btnConfirmDanger} onClick={handleConfirmDelete}>
+              <button
+                className={styles.btnConfirmDanger}
+                onClick={handleConfirmDelete}
+              >
                 Xác nhận xóa
               </button>
             </div>

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // 🚨 ĐÃ THÊM: useNavigate ở đây
 import { Image as ImageIcon, X, ArrowLeft, UploadCloud } from "lucide-react";
 import Button from "../../components/common/Button/Button";
 import Input from "../../components/common/Input/Input";
 import styles from "./CreateAlbum.module.css";
-import axiosClient from "../../services/api";
+import albumService from "../../services/albumService";
 import imageCompression from "browser-image-compression";
 
 function CreateAlbum() {
+  const navigate = useNavigate(); // 🚨 KÍCH HOẠT: Hook điều hướng trang
   const [albumName, setAlbumName] = useState("");
   const [images, setImages] = useState([]);
   const [error, setError] = useState("");
@@ -48,14 +49,12 @@ function CreateAlbum() {
   };
 
   const handleDragOver = (e, index) => {
-    e.preventDefault(); // Bắt buộc phải có để kích hoạt thả
+    e.preventDefault(); 
     if (draggedIndex === null || draggedIndex === index) return;
 
-    // Tiến hành hoán đổi vị trí chèn trong mảng
     const updatedImages = [...images];
     const draggedItem = updatedImages[draggedIndex];
 
-    // Xóa item cũ và chèn vào vị trí mới (Tự động đẩy các ảnh khác sang phải)
     updatedImages.splice(draggedIndex, 1);
     updatedImages.splice(index, 0, draggedItem);
 
@@ -81,49 +80,34 @@ function CreateAlbum() {
       const formData = new FormData();
       formData.append("name", albumName);
 
-      // Cấu hình tiêu chuẩn nén ảnh máy cơ tại Frontend xuống tầm 1.5MB
       const compressionOptions = {
         maxSizeMB: 1.5,
         maxWidthOrHeight: 2000,
         useWebWorker: true,
       };
 
-      // Duyệt qua mảng ảnh, nén từng file theo đúng thứ tự rồi mới append vào FormData
       for (const img of images) {
-        console.log(
-          `Dung lượng gốc của ${img.file.name}: ${(img.file.size / 1024 / 1024).toFixed(2)} MB`,
-        );
-
-        // Tiến hành nén ngầm trên trình duyệt
         const compressedFile = await imageCompression(
           img.file,
           compressionOptions,
         );
-
-        console.log(
-          `Dung lượng sau nén: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`,
-        );
         formData.append("images", compressedFile);
       }
 
-      // Gọi API gửi đi như bình thường
-      const response = await axiosClient.post("/albums", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const data = await albumService.createAlbum(formData);
 
-      if (response.data.success) {
+      if (data.success) {
         // Kích hoạt hiển thị Toast thông báo xịn sò
         setShowToast(true);
 
-        // Reset trạng thái form
-        setAlbumName("");
+        // Giải phóng tài nguyên các URL blob tạm để tránh leak RAM
         images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-        setImages([]);
 
-        // Tự động ẩn toast sau 3 giây
+        // 🚨 ĐÃ CẬP NHẬT: Đợi 2 giây xem hiệu ứng Toast rồi tự động rút về trang chủ Dashboard
         setTimeout(() => {
           setShowToast(false);
-        }, 3000);
+          navigate("/dashboard");
+        }, 2000);
       }
     } catch (err) {
       console.error(err);
@@ -171,7 +155,6 @@ function CreateAlbum() {
           </div>
 
           <div className={styles.gridContainer}>
-            {/* Render các tấm ảnh có khả năng kéo thả */}
             {images.map((img, index) => (
               <div
                 key={index}
@@ -181,14 +164,12 @@ function CreateAlbum() {
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
               >
-                {/* Số thứ tự đánh bên trái */}
                 <span className={styles.indexNumber}>{index + 1}</span>
 
                 <img src={img.previewUrl} alt={`Preview ${index}`} />
 
                 {index === 0 && <span className={styles.coverBadge}>BÌA</span>}
 
-                {/* Dấu X xóa bên phải */}
                 <button
                   type="button"
                   className={styles.removeBtn}
@@ -200,7 +181,6 @@ function CreateAlbum() {
               </div>
             ))}
 
-            {/* Khung bấm chọn file ảnh (Fix cứng kích thước 136x156px) */}
             {images.length < 15 && (
               <label className={styles.uploadTrigger}>
                 <input
