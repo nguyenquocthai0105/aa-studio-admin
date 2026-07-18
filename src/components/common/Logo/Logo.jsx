@@ -1,10 +1,10 @@
-import Logo from "../../../assets/images/Logo.png";
+import logoImg from "../../../assets/images/Logo.png"; // Đổi tên biến import thành logoImg để không trùng với tên hàm
 import styles from "./Logo.module.css";
 
 function Logo() {
     return (
         <div className={styles.logo}>
-            <img src={logo} alt="Á À Studio" />
+            <img src={logoImg} alt="Á À Studio" />
         </div>
     );
 }
