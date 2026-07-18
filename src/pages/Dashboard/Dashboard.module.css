@@ -174,3 +174,146 @@
 }
 .btnAction:hover { background-color: #3d322a; color: #ffffff; }
 .btnDelete:hover { background-color: #ef4444; color: #ffffff; }
+
+/* model xoa album */
+/* --- CSS CHO ĐỘC QUYỀN CUSTOM MODAL NỔI GIỮA MÀN HÌNH --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75); /* Làm tối và mờ hậu cảnh */
+  backdrop-filter: blur(6px); /* Hiệu ứng blur kính mờ siêu sang */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Đảm bảo đè lên mọi menu hay banner khác */
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modalContent {
+  background-color: #1a1a1a; /* Tone tối tiệp màu studio */
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  padding: 2rem;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modalCloseBtn:hover {
+  color: #fff;
+}
+
+.modalHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.warningIconZone {
+  background-color: rgba(255, 77, 79, 0.1);
+  padding: 0.75rem;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.modalBody {
+  text-align: center;
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.targetName {
+  color: #ff4d4f;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  word-break: break-word;
+}
+
+.warningText {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: stretch;
+}
+
+.btnCancel, .btnConfirmDanger {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btnCancel {
+  background-color: #333;
+  color: #eee;
+}
+
+.btnCancel:hover {
+  background-color: #444;
+}
+
+.btnConfirmDanger {
+  background-color: #ff4d4f;
+  color: #fff;
+}
+
+.btnConfirmDanger:hover {
+  background-color: #ff7875;
+  box-shadow: 0 0 12px rgba(255, 77, 79, 0.4);
+}
+
+/* Hiệu ứng chuyển động mượt mà */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

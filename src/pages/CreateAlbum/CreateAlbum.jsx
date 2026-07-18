@@ -13,6 +13,9 @@ function CreateAlbum() {
   const [error, setError] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Trạng thái hiển thị Custom Toast Notification
+  const [showToast, setShowToast] = useState(false);
 
   const handleImageChange = (e) => {
     setError("");
@@ -78,14 +81,14 @@ function CreateAlbum() {
       const formData = new FormData();
       formData.append("name", albumName);
 
-      // Cấu hình tiêu chuẩn nén ảnh máy cơ tại Frontend
+      // Cấu hình tiêu chuẩn nén ảnh máy cơ tại Frontend xuống tầm 1.5MB
       const compressionOptions = {
-        maxSizeMB: 1.5, // Giữ file tối đa 4MB (Dư sức nét căng trên web và an toàn với Cloudinary)
-        maxWidthOrHeight: 2000, // Giữ độ phân giải 2K siêu nét full màn hình Retina
+        maxSizeMB: 1.5,
+        maxWidthOrHeight: 2000,
         useWebWorker: true,
       };
 
-      // Duyệt qua mảng ảnh, nén từng file rồi mới append vào FormData
+      // Duyệt qua mảng ảnh, nén từng file theo đúng thứ tự rồi mới append vào FormData
       for (const img of images) {
         console.log(
           `Dung lượng gốc của ${img.file.name}: ${(img.file.size / 1024 / 1024).toFixed(2)} MB`,
@@ -109,10 +112,18 @@ function CreateAlbum() {
       });
 
       if (response.data.success) {
-        alert(`Xuất bản Album "${albumName}" thành công! 🎉`);
+        // Kích hoạt hiển thị Toast thông báo xịn sò
+        setShowToast(true);
+
+        // Reset trạng thái form
         setAlbumName("");
         images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
         setImages([]);
+
+        // Tự động ẩn toast sau 3 giây
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
       }
     } catch (err) {
       console.error(err);
@@ -212,6 +223,18 @@ function CreateAlbum() {
           </Button>
         </div>
       </form>
+
+      {/* --- CUSTOM TOAST NOTIFICATION --- */}
+      {showToast && (
+        <div className={styles.toastContainer}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(34, 197, 94, 0.1)', padding: '6px', borderRadius: '50%' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div className={styles.toastContent}>Xuất bản Album thành công! 🎉</div>
+        </div>
+      )}
     </div>
   );
 }

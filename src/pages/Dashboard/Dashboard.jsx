@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Shirt,
@@ -8,80 +8,115 @@ import {
   Calendar,
   Edit3,
   Trash2,
+  AlertTriangle,
+  X
 } from "lucide-react";
 import styles from "./Dashboard.module.css";
+import axiosClient from "../../services/api";
 
 function Dashboard() {
-  const [stats] = useState({
-    totalAlbums: 12,
-    totalCostumes: 48,
+  const [albums, setAlbums] = useState([]);
+  const [costumes, setCostumes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [stats, setStats] = useState({
+    totalAlbums: 0,
+    totalCostumes: 0,
     bookingsToday: 3,
     revenueMonth: "45.000.000 đ",
   });
 
-  // Giả lập dữ liệu Album chứa mảng hình ảnh (Lấy ảnh đầu tiên làm đại diện)
-  const [recentAlbums] = useState([
-    {
-      id: 1,
-      name: "Concept Nắng Thủy Tinh",
-      images: [
-        "https://images.unsplash.com/photo-1519741497674-611481863552?w=150&auto=format&fit=crop&q=60", // Ảnh đầu tiên hiển thị
-        "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=150&auto=format&fit=crop&q=60",
-      ],
-      photosCount: 12,
-      updated: "2 giờ trước",
-    },
-    {
-      id: 2,
-      name: "Pre-Wedding Đà Lạt Mộng Mơ",
-      images: [
-        "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=150&auto=format&fit=crop&q=60",
-        "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=150&auto=format&fit=crop&q=60",
-      ],
-      photosCount: 15,
-      updated: "Hôm qua",
-    },
-    {
-      id: 3,
-      name: "Minimalist Studio Lookbook",
-      images: [
-        "https://images.unsplash.com/photo-1519225495810-7512c696505a?w=150&auto=format&fit=crop&q=60",
-      ],
-      photosCount: 8,
-      updated: "3 ngày trước",
-    },
-  ]);
+  // --- TRẠNG THÁI QUẢN LÝ CUSTOM MODAL XÓA ---
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    id: null,
+    name: "",
+    type: "" // "album" hoặc "costume"
+  });
 
-  // Giả lập dữ liệu Trang phục (Ảnh đầu tiên chứa thông tin đồ, giá, QR đã tích hợp sẵn trên ảnh)
-  const [recentCostumes] = useState([
-    {
-      id: 1,
-      name: "Váy Cưới Cúp Ngực Taffeta",
-      images: [
-        "https://images.unsplash.com/photo-1594552072238-b8a33785b261?w=150&auto=format&fit=crop&q=60",
-      ],
-      price: "2.500.000 đ",
-      status: "Sẵn sàng",
-    },
-    {
-      id: 2,
-      name: "Vest Nam Classic Espresso",
-      images: [
-        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=150&auto=format&fit=crop&q=60",
-      ],
-      price: "1.200.000 đ",
-      status: "Đang thuê",
-    },
-    {
-      id: 3,
-      name: "Cổ Phục Nhật Bình Gấm",
-      images: [
-        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=150&auto=format&fit=crop&q=60",
-      ],
-      price: "900.000 đ",
-      status: "Sẵn sàng",
-    },
-  ]);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const [albumsRes, costumesRes] = await Promise.all([
+          axiosClient.get("/albums"),
+          axiosClient.get("/costumes"),
+        ]);
+
+        const fetchedAlbums = albumsRes.data || [];
+        const fetchedCostumes = costumesRes.data || [];
+
+        setAlbums(fetchedAlbums);
+        setCostumes(fetchedCostumes);
+
+        setStats((prev) => ({
+          ...prev,
+          totalAlbums: fetchedAlbums.length,
+          totalCostumes: fetchedCostumes.length,
+        }));
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu Dashboard:", err);
+        setError("Không thể đồng bộ dữ liệu từ Server Backend!");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // --- MỞ MODAL XÓA (THAY THẾ WINDOW.CONFIRM) ---
+  const openDeleteModal = (id, name, type) => {
+    setDeleteModal({
+      isOpen: true,
+      id,
+      name,
+      type
+    });
+  };
+
+  // --- ĐÓNG MODAL ---
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, id: null, name: "", type: "" });
+  };
+
+  // --- HÀM XỬ LÝ XÓA THẬT KHIẤN BẤM "XÁC NHẬN XÓA" TRÊN MODAL ---
+  const handleConfirmDelete = async () => {
+    const { id, name, type } = deleteModal;
+    try {
+      if (type === "album") {
+        const response = await axiosClient.delete(`/albums/${id}`);
+        if (response.data.success) {
+          setAlbums((prev) => prev.filter((album) => album._id !== id));
+          setStats((prev) => ({ ...prev, totalAlbums: prev.totalAlbums - 1 }));
+        }
+      } else if (type === "costume") {
+        const response = await axiosClient.delete(`/costumes/${id}`);
+        if (response.data.success) {
+          setCostumes((prev) => prev.filter((item) => item._id !== id));
+          setStats((prev) => ({ ...prev, totalCostumes: prev.totalCostumes - 1 }));
+        }
+      }
+      closeDeleteModal();
+    } catch (err) {
+      console.error(`Lỗi khi xóa ${type}:`, err);
+      alert("Xóa thất bại, vui lòng thử lại!");
+    }
+  };
+
+  if (loading)
+    return (
+      <div style={{ padding: "2rem", textAlign: "center", color: "#fff" }}>
+        Đang tải không gian quản trị...
+      </div>
+    );
+  if (error)
+    return (
+      <div className={styles.errorBanner} style={{ margin: "2rem" }}>
+        {error}
+      </div>
+    );
 
   return (
     <div className={styles.dashboardContainer}>
@@ -139,7 +174,7 @@ function Dashboard() {
 
       {/* MAIN WORKSPACE */}
       <div className={styles.mainContent}>
-        {/* KHỐI ALBUM */}
+        {/* KHỐI ALBUM THẬT */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
@@ -153,49 +188,44 @@ function Dashboard() {
           </div>
 
           <div className={styles.listContainer}>
-            {recentAlbums.map((album) => {
-              // Lấy hình ảnh đầu tiên từ mảng làm ảnh bìa
-              const coverImage =
-                album.images && album.images.length > 0
-                  ? album.images[0]
-                  : "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=150"; // Backup ảnh lỗi
-
-              return (
-                <div key={album.id} className={styles.listItem}>
-                  <div className={styles.itemMain}>
-                    <div className={styles.imagePreview}>
-                      <img src={coverImage} alt={album.name} loading="lazy" />
+            {albums.length === 0 ? (
+              <p style={{ color: "#aaa", padding: "1rem 0" }}>Chưa có album nào được tạo.</p>
+            ) : (
+              albums.map((album) => {
+                const coverImage = album.images && album.images.length > 0 ? album.images[0] : "";
+                return (
+                  <div key={album._id} className={styles.listItem}>
+                    <div className={styles.itemMain}>
+                      <div className={styles.imagePreview}>
+                        <img src={coverImage} alt={album.name} loading="lazy" />
+                      </div>
+                      <div className={styles.itemDetails}>
+                        <span className={styles.itemName}>{album.name}</span>
+                        <span className={styles.itemMeta}>
+                          {album.photosCount || 0}/15 ảnh • Trạng thái: Sẵn sàng hiển thị
+                        </span>
+                      </div>
                     </div>
-                    <div className={styles.itemDetails}>
-                      <span className={styles.itemName}>{album.name}</span>
-                      <span className={styles.itemMeta}>
-                        {album.photosCount}/15 ảnh • Kích hoạt: {album.updated}
-                      </span>
+                    <div className={styles.itemActions}>
+                      <Link to={`/albums/edit/${album._id}`} className={styles.btnAction} title="Sửa tên & bộ ảnh">
+                        <Edit3 size={16} />
+                      </Link>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnDelete}`}
+                        title="Xóa"
+                        onClick={() => openDeleteModal(album._id, album.name, "album")}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-                  <div className={styles.itemActions}>
-                    {/* Sửa lại phần nút Edit3 trong map album ở Dashboard */}
-                    <Link
-                      to={`/albums/edit/${album.id}`}
-                      className={styles.btnAction}
-                      title="Sửa tên & bộ ảnh"
-                    >
-                      <Edit3 size={16} />
-                    </Link>
-                    <button
-                      className={`${styles.btnAction} ${styles.btnDelete}`}
-                      title="Xóa"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* KHỐI TRANG PHỤC */}
+        {/* KHỐI TRANG PHỤC THẬT */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
@@ -209,56 +239,78 @@ function Dashboard() {
           </div>
 
           <div className={styles.listContainer}>
-            {recentCostumes.map((costume) => {
-              // Lấy hình ảnh đầu tiên làm ảnh đại diện trang phục
-              const costumeImage =
-                costume.images && costume.images.length > 0
-                  ? costume.images[0]
-                  : "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=150";
+            {costumes.length === 0 ? (
+              <p style={{ color: "#aaa", padding: "1rem 0" }}>Chưa có trang phục nào trong kho.</p>
+            ) : (
+              costumes.map((costume) => {
+                const costumeImage = costume.imageUrl || "";
+                const formattedPrice = new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(costume.price || 0);
 
-              return (
-                <div key={costume.id} className={styles.listItem}>
-                  <div className={styles.itemMain}>
-                    <div
-                      className={`${styles.imagePreview} ${styles.imageCostume}`}
-                    >
-                      <img
-                        src={costumeImage}
-                        alt={costume.name}
-                        loading="lazy"
-                      />
+                return (
+                  <div key={costume._id} className={styles.listItem}>
+                    <div className={styles.itemMain}>
+                      <div className={`${styles.imagePreview} ${styles.imageCostume}`}>
+                        <img src={costumeImage} alt={costume.name} loading="lazy" />
+                      </div>
+                      <div className={styles.itemDetails}>
+                        <span className={styles.itemName}>{costume.name}</span>
+                        <span className={styles.itemMeta}>
+                          Giá thuê: <strong className={styles.priceHighlight}>{formattedPrice}</strong>
+                        </span>
+                      </div>
                     </div>
-                    <div className={styles.itemDetails}>
-                      <span className={styles.itemName}>{costume.name}</span>
-                      <span className={styles.itemMeta}>
-                        Giá thuê công khai:{" "}
-                        <strong className={styles.priceHighlight}>
-                          {costume.price}
-                        </strong>
-                      </span>
+                    <div className={styles.itemActions}>
+                      <Link to={`/costumes/edit/${costume._id}`} className={styles.btnAction} title="Sửa thông tin giá & ảnh">
+                        <Edit3 size={16} />
+                      </Link>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnDelete}`}
+                        title="Xóa đồ"
+                        onClick={() => openDeleteModal(costume._id, costume.name, "costume")}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-                  <div className={styles.itemActions}>
-                    <Link
-                      to={`/costumes/edit/${costume.id}`}
-                      className={styles.btnAction}
-                      title="Sửa thông tin giá & ảnh"
-                    >
-                      <Edit3 size={16} />
-                    </Link>
-                    <button
-                      className={`${styles.btnAction} ${styles.btnDelete}`}
-                      title="Xóa đồ"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>
+
+      {/* --- CẤU TRÚC CUSTOM MODAL PHÍA DƯỚI CÙNG --- */}
+      {deleteModal.isOpen && (
+        <div className={styles.modalOverlay} onClick={closeDeleteModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.modalCloseBtn} onClick={closeDeleteModal}>
+              <X size={18} />
+            </button>
+            <div className={styles.modalHeader}>
+              <div className={styles.warningIconZone}>
+                <AlertTriangle size={28} color="#ff4d4f" />
+              </div>
+              <h3>Xác nhận xóa vĩnh viễn</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p>Bạn có chắc chắn muốn xóa vĩnh viễn {deleteModal.type === "album" ? "album ảnh" : "trang phục"}:</p>
+              <div className={styles.targetName}>"{deleteModal.name}"</div>
+              <p className={styles.warningText}>Hành động này không thể hoàn tác và dữ liệu sẽ mất hoàn toàn khỏi database.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.btnCancel} onClick={closeDeleteModal}>
+                Hủy bỏ
+              </button>
+              <button className={styles.btnConfirmDanger} onClick={handleConfirmDelete}>
+                Xác nhận xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
