@@ -4,17 +4,20 @@ import { Image as ImageIcon, X, ArrowLeft, UploadCloud } from "lucide-react";
 import Button from "../../components/common/Button/Button";
 import Input from "../../components/common/Input/Input";
 import styles from "./CreateAlbum.module.css";
+import axiosClient from "../../services/api";
+import imageCompression from "browser-image-compression";
 
 function CreateAlbum() {
   const [albumName, setAlbumName] = useState("");
-  const [images, setImages] = useState([]); 
+  const [images, setImages] = useState([]);
   const [error, setError] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleImageChange = (e) => {
     setError("");
     const files = Array.from(e.target.files);
-    
+
     if (images.length + files.length > 15) {
       setError("Một album chỉ được phép chứa tối đa 15 hình ảnh!");
       return;
@@ -48,11 +51,11 @@ function CreateAlbum() {
     // Tiến hành hoán đổi vị trí chèn trong mảng
     const updatedImages = [...images];
     const draggedItem = updatedImages[draggedIndex];
-    
+
     // Xóa item cũ và chèn vào vị trí mới (Tự động đẩy các ảnh khác sang phải)
     updatedImages.splice(draggedIndex, 1);
     updatedImages.splice(index, 0, draggedItem);
-    
+
     setDraggedIndex(index);
     setImages(updatedImages);
   };
@@ -61,19 +64,62 @@ function CreateAlbum() {
     setDraggedIndex(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!albumName.trim()) {
-      setError("Vui lòng nhập tên Album");
-      return;
-    }
-    if (images.length === 0) {
-      setError("Vui lòng chọn ít nhất 1 hình ảnh");
-      return;
-    }
+    setError("");
 
-    console.log("Thứ tự ảnh đã sắp xếp final:", images);
-    alert(`Tạo thành công Album với thứ tự ảnh chuẩn studio!`);
+    if (!albumName.trim()) return setError("Vui lòng nhập tên Album");
+    if (images.length === 0)
+      return setError("Vui lòng chọn ít nhất 1 hình ảnh");
+
+    try {
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append("name", albumName);
+
+      // Cấu hình tiêu chuẩn nén ảnh máy cơ tại Frontend
+      const compressionOptions = {
+        maxSizeMB: 1.5, // Giữ file tối đa 4MB (Dư sức nét căng trên web và an toàn với Cloudinary)
+        maxWidthOrHeight: 2000, // Giữ độ phân giải 2K siêu nét full màn hình Retina
+        useWebWorker: true,
+      };
+
+      // Duyệt qua mảng ảnh, nén từng file rồi mới append vào FormData
+      for (const img of images) {
+        console.log(
+          `Dung lượng gốc của ${img.file.name}: ${(img.file.size / 1024 / 1024).toFixed(2)} MB`,
+        );
+
+        // Tiến hành nén ngầm trên trình duyệt
+        const compressedFile = await imageCompression(
+          img.file,
+          compressionOptions,
+        );
+
+        console.log(
+          `Dung lượng sau nén: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`,
+        );
+        formData.append("images", compressedFile);
+      }
+
+      // Gọi API gửi đi như bình thường
+      const response = await axiosClient.post("/albums", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (response.data.success) {
+        alert(`Xuất bản Album "${albumName}" thành công! 🎉`);
+        setAlbumName("");
+        images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+        setImages([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi trong quá trình xử lý hoặc upload ảnh máy cơ!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,7 +131,9 @@ function CreateAlbum() {
 
       <div className={styles.pageHeader}>
         <h1>Tạo Album Nghệ Thuật Mới</h1>
-        <p>Thành phẩm hiển thị theo đúng thứ tự số đánh dấu từ trái sang phải.</p>
+        <p>
+          Thành phẩm hiển thị theo đúng thứ tự số đánh dấu từ trái sang phải.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.formStructure}>
@@ -106,14 +154,16 @@ function CreateAlbum() {
         <div className={styles.uploadSection}>
           <div className={styles.sectionLabel}>
             <span>Hình ảnh trưng bày ({images.length}/15)</span>
-            <span className={styles.subLabel}>Giữ chuột vào ảnh để kéo thả thay đổi vị trí sắp xếp số thứ tự</span>
+            <span className={styles.subLabel}>
+              Giữ chuột vào ảnh để kéo thả thay đổi vị trí sắp xếp số thứ tự
+            </span>
           </div>
 
           <div className={styles.gridContainer}>
             {/* Render các tấm ảnh có khả năng kéo thả */}
             {images.map((img, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`${styles.imageCard} ${draggedIndex === index ? styles.dragging : ""}`}
                 draggable
                 onDragStart={() => handleDragStart(index)}
@@ -124,9 +174,9 @@ function CreateAlbum() {
                 <span className={styles.indexNumber}>{index + 1}</span>
 
                 <img src={img.previewUrl} alt={`Preview ${index}`} />
-                
+
                 {index === 0 && <span className={styles.coverBadge}>BÌA</span>}
-                
+
                 {/* Dấu X xóa bên phải */}
                 <button
                   type="button"
@@ -157,7 +207,9 @@ function CreateAlbum() {
         </div>
 
         <div className={styles.actionRow}>
-          <Button type="submit" size="lg">Xuất bản Album</Button>
+          <Button type="submit" size="lg" disabled={loading}>
+            {loading ? "Đang nén & xuất bản..." : "Xuất bản Album"}
+          </Button>
         </div>
       </form>
     </div>
