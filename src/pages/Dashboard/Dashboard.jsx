@@ -10,20 +10,24 @@ import {
   Trash2,
   AlertTriangle,
   X,
+  Images, // Icon bổ sung cho Slider
 } from "lucide-react";
 import styles from "./Dashboard.module.css";
 import albumService from "../../services/albumService";
 import costumeService from "../../services/costumeService";
+import { sliderService } from "../../services/sliderService"; // Import thêm sliderService
 
 function Dashboard() {
   const [albums, setAlbums] = useState([]);
   const [costumes, setCostumes] = useState([]);
+  const [sliders, setSliders] = useState([]); // State danh sách Slider
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [stats, setStats] = useState({
     totalAlbums: 0,
     totalCostumes: 0,
+    totalSliders: 0,
     bookingsToday: 3,
     revenueMonth: "45.000.000 đ",
   });
@@ -32,7 +36,7 @@ function Dashboard() {
     isOpen: false,
     id: null,
     name: "",
-    type: "",
+    type: "", // 'album' | 'costume' | 'slider'
   });
 
   useEffect(() => {
@@ -40,21 +44,26 @@ function Dashboard() {
       try {
         setLoading(true);
 
-        const [albumsData, costumesData] = await Promise.all([
+        // Gọi song song cả 3 API
+        const [albumsData, costumesData, slidersData] = await Promise.all([
           albumService.getAllAlbums(),
           costumeService.getAllCostumes(),
+          sliderService.getAll(),
         ]);
 
         const fetchedAlbums = albumsData || [];
         const fetchedCostumes = costumesData || [];
+        const fetchedSliders = slidersData || [];
 
         setAlbums(fetchedAlbums);
         setCostumes(fetchedCostumes);
+        setSliders(fetchedSliders);
 
         setStats((prev) => ({
           ...prev,
           totalAlbums: fetchedAlbums.length,
           totalCostumes: fetchedCostumes.length,
+          totalSliders: fetchedSliders.length,
         }));
       } catch (err) {
         console.error("Lỗi tải dữ liệu Dashboard:", err);
@@ -100,6 +109,15 @@ function Dashboard() {
           setStats((prev) => ({
             ...prev,
             totalCostumes: prev.totalCostumes - 1,
+          }));
+        }
+      } else if (type === "slider") {
+        const data = await sliderService.delete(id);
+        if (data.success) {
+          setSliders((prev) => prev.filter((item) => item._id !== id));
+          setStats((prev) => ({
+            ...prev,
+            totalSliders: prev.totalSliders - 1,
           }));
         }
       }
@@ -165,11 +183,11 @@ function Dashboard() {
 
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.iconGreen}`}>
-            <Calendar size={22} />
+            <Images size={22} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Lịch chụp hôm nay</span>
-            <span className={styles.statValue}>{stats.bookingsToday}</span>
+            <span className={styles.statLabel}>Ảnh Slider Hero</span>
+            <span className={styles.statValue}>{stats.totalSliders}</span>
           </div>
         </div>
 
@@ -185,6 +203,7 @@ function Dashboard() {
       </section>
 
       <div className={styles.mainContent}>
+        {/* KHỐI 1: QUẢN LÝ ALBUM */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
@@ -249,6 +268,7 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* KHỐI 2: QUẢN LÝ TRANG PHỤC */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
@@ -320,8 +340,65 @@ function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* KHỐI 3: QUẢN LÝ ÁNH SLIDER HERO (MỚI THÊM) */}
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitle}>
+              <h3>Quản lý Ảnh Trình Chiếu (Hero Slider)</h3>
+              <p>Hiển thị tràn màn hình ở đầu trang chủ Web User</p>
+            </div>
+
+            <Link to="/slider" className={styles.btnPrimary}>
+              <Plus size={16} />
+              <span>Thêm ảnh Slider</span>
+            </Link>
+          </div>
+
+          <div className={styles.listContainer}>
+            {sliders.length === 0 ? (
+              <p className={styles.emptyText}>Chưa có ảnh slider nào được tải lên.</p>
+            ) : (
+              sliders.map((slider) => (
+                <div key={slider._id} className={styles.listItem}>
+                  <div className={styles.itemMain}>
+                    <div className={styles.imagePreview}>
+                      <img src={slider.imageUrl} alt={slider.title || "Slider"} loading="lazy" />
+                    </div>
+
+                    <div className={styles.itemDetails}>
+                      <span className={styles.itemName}>
+                        {slider.title || "Ảnh Trình Chiếu Hero"}
+                      </span>
+                      <span className={styles.itemMeta}>
+                        Thứ tự hiển thị: {slider.order || 0} • Đã lưu trên Cloudinary
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.itemActions}>
+                    <button
+                      className={`${styles.btnAction} ${styles.btnDelete}`}
+                      title="Xóa ảnh slider"
+                      onClick={() =>
+                        openDeleteModal(
+                          slider._id,
+                          slider.title || "Ảnh Slider này",
+                          "slider"
+                        )
+                      }
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
+      {/* MODAL XÁC NHẬN XÓA DÙNG CHUNG CẢ 3 MỤC */}
       {deleteModal.isOpen && (
         <div className={styles.modalOverlay} onClick={closeDeleteModal}>
           <div
@@ -342,12 +419,16 @@ function Dashboard() {
             <div className={styles.modalBody}>
               <p>
                 Bạn có chắc chắn muốn xóa vĩnh viễn{" "}
-                {deleteModal.type === "album" ? "album ảnh" : "trang phục"}:
+                {deleteModal.type === "album"
+                  ? "album ảnh"
+                  : deleteModal.type === "costume"
+                  ? "trang phục"
+                  : "ảnh slider trình chiếu"}
+                :
               </p>
               <div className={styles.targetName}>"{deleteModal.name}"</div>
               <p className={styles.warningText}>
-                Hành động này không thể hoàn tác và dữ liệu sẽ mất hoàn toàn khỏi
-                database.
+                Hành động này không thể hoàn tác và ảnh trên Cloudinary sẽ bị gỡ bỏ vĩnh viễn.
               </p>
             </div>
 
